@@ -1,35 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react';
 import './App.css'
 
+import { db } from './firebaseConfig'; // <-- firebaseConfigをインポート
+import { collection, addDoc, getDocs } from "firebase/firestore"; // <-- Firestoreの関数をインポート
+
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState<string[]>([]);
+
+  // データ追加の関数
+  const addMessage = async () => {
+    try {
+      // 'messages'っていうコレクションにデータを追加
+      const docRef = await addDoc(collection(db, "messages"), {
+        text: message,
+        timestamp: new Date()
+      });
+      console.log("Document written with ID: ", docRef.id);
+      setMessage(''); // 入力フィールドをクリア
+      fetchMessages(); // 追加後に再取得して表示を更新
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  };
+
+  // データ取得の関数
+  const fetchMessages = async () => {
+    const querySnapshot = await getDocs(collection(db, "messages"));
+    const fetchedMessages: string[] = [];
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      console.log(doc.id, " => ", doc.data());
+      fetchedMessages.push(doc.data().text); // textフィールドを取得
+    });
+    setMessages(fetchedMessages);
+  };
+
+  // コンポーネントがマウントされた時にメッセージを取得
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   return (
-    <>
+    <div className="App">
+      <h1>Vite + React + Firebaseだぜぃ！🎉</h1>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="メッセージを入力！"
+        />
+        <button onClick={addMessage}>Firestoreに送信！</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <h2>保存されたメッセージ</h2>
+      {messages.length === 0 ? (
+        <p>まだメッセージがないぜ</p>
+      ) : (
+        <ul>
+          {messages.map((msg, index) => (
+            <li key={index}>{msg}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
