@@ -53,4 +53,26 @@ export default tseslint.config({
 })
 ```
 
-test
+```
+npm test
+```
+```
+npm run test:watch
+```
+
+
+```
+git checkout develop
+git pull origin develop # 最新のdevelopをプル
+git checkout -b feature/add-sticky-note
+```
+
+```
+git add .
+git commit -m "feat: Implement add sticky note functionality"
+git push origin feature/add-sticky-note
+```
+
+```
+npm run dev
+```
