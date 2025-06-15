@@ -1,0 +1,12 @@
+.note {
+  background-color: #ffffee; /* クリーム色 */
+  border: 1px solid #ccc;
+  border-radius: 5px; /* 角丸 */
+  padding: 10px;
+  margin: 10px; /* 付箋同士の隙間*/
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* 影で立体感を出す */
+  width: 200px; /* ある程度の幅を決める*/
+  min-height: 100px; /* 最小の高さ */
+  /* ドラッグ機能のために、後で position: absolute; とか必要になるかも */
+  /* Geminiいつもありがとう */
+}
