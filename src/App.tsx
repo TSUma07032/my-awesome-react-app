@@ -4,6 +4,7 @@
  * @author 守屋翼
  */
 
+import './App.css'; // スタイルシートのインポート
 import React, {useState} from "react";
 import Note from './components/Note';
 import NoteInput from './components/NoteInput';
@@ -42,14 +43,21 @@ export default function App() {
     setNotes(prevNotes => [...prevNotes, newNote]); // 既存のノートに新しいノートを追加。イミュータブルかつコールバックです
   }
 
+  // ノートの削除を処理する関数
+  const handleDeleteNote = (id: string) => {
+    setNotes(prevNotes => prevNotes.filter(note => note.id !== id)); // 指定されたIDのノートを除外して新しい配列を作成
+  };
+
+  
+
   return (
     <div className="App"> {/*後でAppを作ろうね*/}
       <h1>付箋アプリケーション</h1>
       <NoteInput onAddNote={handleAddNote} /> {/* NoteInputコンポーネントをレンダリングし、ノート追加のコールバックを渡す */}
 
-      <div className = "notes-list-countainer">{/* ノートのリストを表示するコンテナ */}
+      <div className = "notes-list-container">{/* ノートのリストを表示するコンテナ */}
         {notes.map((note)=>( //mapメソッドを使用して、ノートの配列をループ処理
-          <Note key={note.id} id={note.id} text={note.text} /> // 各ノートをNoteコンポーネントとしてレンダリング。key属性はReactのパフォーマンス最適化のために必要
+          <Note key={note.id} id={note.id} text={note.text} onDelete={handleDeleteNote} /> // 各ノートをNoteコンポーネントとしてレンダリング。key属性はReactのパフォーマンス最適化のために必要
         ))}
         {notes.length === 0 &&  // ノートがない場合のメッセージ
           <p>ノートがありません。新しいノートを追加してください。</p>}

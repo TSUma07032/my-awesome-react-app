@@ -12,15 +12,20 @@ import React from 'react';
  * NotePropsは、Noteコンポーネントに渡されるプロパティの型定義です。
  * @property {string} id - ノートのユニークなID。
  * @property {string} text - ノートの内容。
+ * @property {function} onDelete - ノート削除のためのコールバック関数。
  * @example
  * const noteProps: NoteProps = {
  *   id: '12345',
  *  text: 'This is a note.'
+ *  onDelete: (id) => {
+ *   console.log(`Note with ID ${id} deleted.`);
+ *  }
  * }
  */
 type NoteProps = {
     id: string;
     text: string;
+    onDelete: (id: string) => void; // ノート削除のためのコールバック関数
 }
 
 /**
@@ -31,11 +36,23 @@ type NoteProps = {
  * @example
  * <Note id="12345" text="This is a note." />
  */
-export default function Note(props: NoteProps){
+export default function Note({id, text, onDelete}: NoteProps){ /* 分割代入*/
+
+    /*ノート削除handle */
+    const handleDelete = () => {
+        onDelete(id); // onDeleteコールバックを呼び出して、ノートを削除
+    };
+
     return (
-        <div className="note">
-            <h2 className="note-id">ID: {props.id}</h2>
-            <p className="note-text">{props.text}</p>
+        <div className="note-container">
+             {/* ノートのコンテナ */}
+            <div className="note">
+                <h2 className="note-id">{text}</h2>
+                <p className="note-text">ID: {id}</p>
+            </div>
+            <button className="delete-button" onClick={handleDelete}>
+                削除
+            </button>
         </div>
     );
 }
