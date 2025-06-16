@@ -1,120 +1,61 @@
-import {useState} from 'react';
+/**
+ * @file App.tsx
+ * @fileoverview Appコンポーネントは、ノートアプリケーションのメインコンポーネントで、ノートの追加と表示を管理します。
+ * @author 守屋翼
+ */
+
+import React, {useState} from "react";
+import Note from './components/Note';
+import NoteInput from './components/NoteInput';
+import generateUniqueId  from './utils/idGenerator';
+
+/**
+ * NoteDataは、ノートのデータを表す型定義です。
+ * * @property {string} id - ノートのユニークなID。
+ * * @property {string} text - ノートの内容。
+ * @example
+ *  ToDo
+ */
+type NoteData = {
+    id: string; // ノートのユニークなID
+    text: string; // ノートの内容
+};
 
 
-function Square({value, onSquareClick}: {value: string | null, onSquareClick: () => void}) {
-    return (
-    <button 
-      className = "square"
-      onClick = {onSquareClick}
-    >
-    {value}
-    </button>
-    );
-}
+/**
+ * App関数コンポーネントは、ノートアプリケーションのメインコンポーネントで、ノートの追加と表示を管理します。
+ * 
+ */
 
-function Board({ xIsNext, squares, onPlay }: { xIsNext: boolean, squares: Array<string | null>, onPlay: (nextSquares: Array<string | null>) => void }) {
-    function handleClick(i:number){
-        if (squares[i] || calculateWinner(squares)) {
-            return; // Ignore click if square is already filled
-        }
-        const nextSquares = squares.slice();
-        if (xIsNext) {
-            nextSquares[i] = 'X';
-        } else {
-            nextSquares[i] = 'O';
-        }
-        onPlay(nextSquares);
+export default function App() {
+  // useStateフックを使用して、ノートのデータを管理
+  const [notes, setNotes] = useState<NoteData[]>([]);
+
+  // ノートを追加する関数
+  // NoteInputコンポーネントから呼び出される前提のため、あっちで定義されているonAddNote関数を実装
+  const handleAddNote = (text: string) => {
+    // 新しいノートのデータを作成
+    const newNote: NoteData = {
+      id: generateUniqueId(), // ユニークなIDを生成
+      text: text // 入力されたテキストを設定
     }
-    const winner = calculateWinner(squares);
-    let status;
-    if (winner) {
-        status = "Winner: " + winner;
-    } else {
-        status = "Next player: " + (xIsNext ? 'X' : 'O');
-    }
-
-    return (
-        <>
-        <div className="status">{status}</div>
-          <div className="board-row">
-            < Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
-            < Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
-            < Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
-          </div>
-          <div className="board-row">
-            < Square value={squares[3]} onSquareClick={() => handleClick(3)}/>
-            < Square value={squares[4]} onSquareClick={() => handleClick(4)}/>
-            < Square value={squares[5]} onSquareClick={() => handleClick(5)}/>
-          </div>
-          <div className="board-row">
-            < Square value={squares[6]} onSquareClick={() => handleClick(6)}/>
-            < Square value={squares[7]} onSquareClick={() => handleClick(7)}/>
-            < Square value={squares[8]} onSquareClick={() => handleClick(8)}/>
-          </div>
-        </>
-    )
-}
-
-export default function Game(){
-  const [xIsNext, setXIsNext] = useState(true);
-  const [history, setHistory] = useState([Array(9).fill(null)]);
-  const [currentMove, setCurrentMove] = useState(0);
-  const currentSquares = history[currentMove];
-
-  function handlePlay(nextSquares: Array<string | null>) {
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
-    setHistory(nextHistory);
-    setCurrentMove(nextHistory.length - 1);
-    setXIsNext(!xIsNext);
+    setNotes(prevNotes => [...prevNotes, newNote]); // 既存のノートに新しいノートを追加。イミュータブルかつコールバックです
   }
-
-  function jumpTo(nextMove: number) {
-    setCurrentMove(nextMove);
-    setXIsNext(nextMove % 2 === 0);
-  }
-
-  const moves = history.map((squares, move) => {
-    let description;
-    if (move > 0) {
-      description = 'Go to move #' + move;
-    } else {
-      description = 'Go to game start';
-    }
-    return (
-      <li  key = {move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
-      </li>
-    );
-  });
 
   return (
-    <div className="game">
-      <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
-      </div>
-      <div className="game-info">
-        <ol>{moves}</ol>
+    <div className="App"> {/*後でAppを作ろうね*/}
+      <h1>付箋アプリケーション</h1>
+      <NoteInput onAddNote={handleAddNote} /> {/* NoteInputコンポーネントをレンダリングし、ノート追加のコールバックを渡す */}
+
+      <div className = "notes-list-countainer">{/* ノートのリストを表示するコンテナ */}
+        {notes.map((note)=>( //mapメソッドを使用して、ノートの配列をループ処理
+          <Note key={note.id} id={note.id} text={note.text} /> // 各ノートをNoteコンポーネントとしてレンダリング。key属性はReactのパフォーマンス最適化のために必要
+        ))}
+        {notes.length === 0 &&  // ノートがない場合のメッセージ
+          <p>ノートがありません。新しいノートを追加してください。</p>}
       </div>
     </div>
-  );
+  );  
 }
 
-function calculateWinner(squares: Array<string | null>) {
-    const lines = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
-    for (let i = 0; i < lines.length; i++) {
-        const [a, b, c] = lines[i];
-        if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-            return squares[a];
-        }
-    }
-    return null;
-}
+
