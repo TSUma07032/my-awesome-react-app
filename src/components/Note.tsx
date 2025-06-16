@@ -47,8 +47,8 @@ export default function Note({id, text, onDelete}: NoteProps){ /* 分割代入*/
         <div className="note-container">
              {/* ノートのコンテナ */}
             <div className="note">
-                <h2 className="note-id">ID: {id}</h2>
-                <p className="note-text">{text}</p>
+                <h2 className="note-id">{text}</h2>
+                <p className="note-text">ID: {id}</p>
             </div>
             <button className="delete-button" onClick={handleDelete}>
                 削除

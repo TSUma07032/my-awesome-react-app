@@ -1,0 +1,28 @@
+.note-input-container {
+  display: flex;
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid var(--border-color); /*ダークモード対応*/
+  border-radius: 8px;
+  background-color: var(--card-bg-color);/*ダークモード対応*/
+  box-shadow: 2px 2px 5px var(--shadow-color); /*ダークモード対応*/
+}
+
+.note-input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color); /*ダークモード対応*/
+  border-radius: 4px;
+  background-color: var(--input-bg-color); /*ダークモード対応*/
+  color: var(--text-color); /* 入力文字の色も変数に */
+}
+
+.add-note-button {
+  margin-left: 10px;
+  padding: 8px 15px;
+  background-color: var(--button-primary-bg); /*ダークモード対応*/
+  color: var(--text-color); /* ボタン内の文字色も変数に */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
