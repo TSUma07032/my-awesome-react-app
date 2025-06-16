@@ -9,16 +9,6 @@
  * @example
  * ToDo
  */
-export default class IDGenerator {
-    /**
-     * IDを生成します。
-     * crypto.randomUUID()を使用して、ユニークなIDを生成します。
-     * @param {} - 特に引数はありません。
-     * @return {string} - 生成されたユニークなIDを返します。
-     */
-    generate(): string {
-        return crypto.randomUUID();
-    }
-
+export default function generateUniqueId(): string { // ★★★ ここで関数を定義して、デフォルトエクスポートするニャ！ ★★★
+  return crypto.randomUUID();
 }
-    
