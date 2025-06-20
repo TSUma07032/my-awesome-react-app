@@ -1,5 +1,6 @@
 import '../styles/Note.css';
 import React from 'react';
+import { NoteData } from '../types'; // NoteData型をインポート
 
 /**
  * @filename Note.tsx
@@ -10,6 +11,7 @@ import React from 'react';
 
 /**
  * NotePropsは、Noteコンポーネントに渡されるプロパティの型定義です。
+ * @typedef {Object} NoteProps
  * @property {string} id - ノートのユニークなID。
  * @property {string} text - ノートの内容。
  * @property {function} onDelete - ノート削除のためのコールバック関数。
@@ -23,8 +25,9 @@ import React from 'react';
  * }
  */
 type NoteProps = {
-    id: string;
-    text: string;
+    //id: string;
+    //text: string;
+    note : NoteData; // NoteData型を使用して、ノートのデータを受け取る
     onDelete: (id: string) => void; // ノート削除のためのコールバック関数
 }
 
@@ -36,19 +39,19 @@ type NoteProps = {
  * @example
  * <Note id="12345" text="This is a note." />
  */
-export default function Note({id, text, onDelete}: NoteProps){ /* 分割代入*/
+export default function Note({note, onDelete}: NoteProps){ /* 分割代入*/
 
     /*ノート削除handle */
     const handleDelete = () => {
-        onDelete(id); // onDeleteコールバックを呼び出して、ノートを削除
+        onDelete(note.id); // onDeleteコールバックを呼び出して、ノートを削除
     };
 
     return (
         <div className="note-container">
              {/* ノートのコンテナ */}
             <div className="note">
-                <h2 className="note-id">{text}</h2>
-                <p className="note-text">ID: {id}</p>
+                <h2 className="note-id">{note.text}</h2>
+                <p className="note-text">ID: {note.id}</p>
             </div>
             <button className="delete-button" onClick={handleDelete}>
                 削除
