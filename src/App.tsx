@@ -8,7 +8,7 @@ import './App.css'; // スタイルシートのインポート
 import React, {useState, useEffect} from "react";
 import Note from './components/Note';
 import NoteInput from './components/NoteInput';
-import { addNoteToFirestore, getNotesFromFirestore } from './services/firebase';
+import { addNoteToFirestore,  subscribeToNotes } from './services/firebase'; 
 import { NoteData } from './types'; // NoteData型をインポート
 
 
@@ -21,40 +21,45 @@ export default function App() {
   // useStateフックを使用して、ノートのデータを管理
   const [notes, setNotes] = useState<NoteData[]>([]);
 
-  // コンポーネントがマウントされたときにFirestoreからノートを取得
+  // --- アプリケーション起動時に付箋をリアルタイムで読み込む処理 ---
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const fetchedNotes = await getNotesFromFirestore(); // Firestore から付箋データを取得します。
-        setNotes(fetchedNotes); // 取得した付箋データを State に設定します。
-      } catch (e) {
-        // 読み込みに失敗した場合、コンソールにエラーを出力します。
-        console.error("Failed to load notes:", e);
-        // 必要に応じて、ユーザーにエラーを通知するUIを追加できます。
-      }
+    // subscribeToNotes を呼び出し、リアルタイム監視を開始します。
+    // データが変更されるたびに setNotes が呼び出され、State が更新されます。
+    // Appコンポーネントがマウントされたとき、すなわちアプリケーションが起動したときに一度だけ実行されます。
+    const unsubscribe = subscribeToNotes((fetchedNotes) => {
+      setNotes(fetchedNotes);
+    });
+
+    // コンポーネントがアンマウントされる際に監視を停止します。
+    return () => {
+      unsubscribe();
     };
-    fetchNotes(); // 関数を実行します。
   }, []); // 空の依存配列 [] を渡すことで、コンポーネントがマウントされた時 (最初の一回だけ) 実行されるようにします。
 
-  // ノートを追加する関数
-  const handleAddNote = async (text: string) => {
+
+    // --- 新しい付箋をデータベースに保存する司令塔 ---
+  /**
+   * 新しい付箋のテキストを受け取り、それを Firestore に保存します。
+   * State (画面表示) の更新は、Firestore のリアルタイムリスナー (onSnapshot) が行います。
+   * @param {string} text - 保存する付箋のテキスト内容。
+   */
+  const handleSaveNewNote = async (text: string) => {
     // NoteData 型の新しい付箋オブジェクトを作成します。
     // Firestore がIDを生成
     const newNoteContent: Omit<NoteData, 'id'> = { text: text }; // ★★★ IDを含まないデータを作成します ★★★
 
     try {
-      // addNoteToFirestore が Firestore が生成したID付きの NoteData を返します。
-      const addedNote = await addNoteToFirestore(newNoteContent); // Firestoreに新しいノートを追加します。同時に、Firestoreから返ってくるIDを含むノートデータを取得します。
-      setNotes((prevNotes) => [...prevNotes, addedNote]); // Firestoreから返ってきたID付きの付箋をStateに追加
+      await addNoteToFirestore(newNoteContent); // Firestoreにノートを追加します。
     } catch (e) {
       console.error("Failed to save note:", e);
     }
   };
 
-  // ノートの削除を処理する関数
-  const handleDeleteNote = (id: string) => {
-    setNotes(prevNotes => prevNotes.filter(note => note.id !== id)); // 指定されたIDのノートを除外して新しい配列を作成
-    // firebaseからの削除処理 ToDo
+  const handleDeleteNote = (idToDelete: string) => {
+    // State の更新は subscribeToNotes が行うため、ここでは不要になります。
+    // setNotes((prevNotes) => prevNotes.filter((note) => note.id !== idToDelete)); 
+    // Firebase からの削除処理をここに追加します ToDo
+    console.log(`Attempting to delete note with ID: ${idToDelete}`);
   };
 
   
@@ -62,7 +67,7 @@ export default function App() {
   return (
     <div className="App"> {/*後でAppを作ろうね*/}
       <h1>付箋アプリケーション</h1>
-      <NoteInput onAddNote={handleAddNote} /> {/* NoteInputコンポーネントをレンダリングし、ノート追加のコールバックを渡す */}
+      <NoteInput onAddNote={handleSaveNewNote} /> {/* NoteInputコンポーネントをレンダリングし、ノート追加のコールバックを渡す */}
 
       <div className = "notes-list-container">{/* ノートのリストを表示するコンテナ */}
         {notes.map((note)=>( //mapメソッドを使用して、ノートの配列をループ処理
