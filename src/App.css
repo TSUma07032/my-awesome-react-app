@@ -5,6 +5,55 @@
   text-align: center;
 }
 
+/* グローバルなCSS変数を定義.デフォルトはライトモード*/
+:root {
+  --bg-color: #f0f2f5;       /* 全体の背景色 */
+  --text-color: #333;       /* 全体の文字色 */
+  --card-bg-color: #ffffff; /* カードや付箋の背景色 */
+  --border-color: #e0e0e0;   /* ボーダーの色 */
+  --shadow-color: rgba(0, 0, 0, 0.1); /* 影の色 */
+  --input-bg-color: #f0f0f0; /* 入力フィールドの背景色 */
+  --button-primary-bg: #4CAF50; /* プライマリボタンの色 */
+  --button-danger-bg: #f44336;  /* 危険系ボタンの色 */
+  /*geminiいつもありがとう*/
+}
+
+/* ユーザーのOSがダークモードだったら、CSS変数を上書き*/
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #282c34;     /* ダークモードの背景色 */
+    --text-color: #f8f8f2;   /* ダークモードの文字色 */
+    --card-bg-color: #3b4252; /* ダークモードのカード背景色 */
+    --border-color: #4c566a; /* ダークモードのボーダー色 */
+    --shadow-color: rgba(0, 0, 0, 0.5); /* ダークモードの影の色 */
+    --input-bg-color: #434c5e; /* ダークモードの入力フィールド背景色 */
+    --button-primary-bg: #81A1C1; /* ダークモードのプライマリボタン色 */
+    --button-danger-bg: #BF616A;  /* ダークモードの危険系ボタン色 */
+  }
+}/*geminiいつもありがとう*/
+
+/*全体への基本スタイル適用*/
+.App {
+  font-family: 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: var(--text-color); /* CSS変数を使用！ */
+  background-color: var(--bg-color); /* CSS変数を使用！ */
+  min-height: 100vh; /* 画面全体に広げる */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* 上寄せ */
+  transition: background-color 0.3s ease, color 0.3s ease; /* モード切り替えを滑らかに！ */
+}/*geminiいつもありがとう*/
+
+h1 {
+  color: var(--text-color); /* CSS変数を使用！ */
+  margin-top: 30px;
+  margin-bottom: 20px;
+}/*geminiいつもありがとう*/
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -39,4 +88,16 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.notes-list-container { /* 追加*/
+  display: flex; /* 付箋を横並びにする！ */
+  flex-wrap: wrap; /* 画面幅が足りなくなったら、折り返す */
+  gap: 20px; /* 付箋同士の隙間！ */
+  padding: 20px;
+  justify-content: flex-start; /* 左から並べる！ */
+  align-items: flex-start; /* 上から並べる！ */
+  min-height: 200px; /* ある程度の高さを確保する！ */
+  border: 1px dashed #ddd; /* どんな場所かわかるように点線で囲んでおく.デバッグ用 */
+  margin: 20px;
 }
