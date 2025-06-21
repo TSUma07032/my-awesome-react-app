@@ -5,11 +5,10 @@
  */
 
 import './App.css'; // スタイルシートのインポート
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import Note from './components/Note';
 import NoteInput from './components/NoteInput';
-import generateUniqueId  from './utils/idGenerator';
-import { addNoteToFirestore } from './services/firebase';
+import { addNoteToFirestore, getNotesFromFirestore } from './services/firebase';
 import { NoteData } from './types'; // NoteData型をインポート
 
 
@@ -22,23 +21,35 @@ export default function App() {
   // useStateフックを使用して、ノートのデータを管理
   const [notes, setNotes] = useState<NoteData[]>([]);
 
+  // コンポーネントがマウントされたときにFirestoreからノートを取得
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const fetchedNotes = await getNotesFromFirestore(); // Firestore から付箋データを取得します。
+        setNotes(fetchedNotes); // 取得した付箋データを State に設定します。
+      } catch (e) {
+        // 読み込みに失敗した場合、コンソールにエラーを出力します。
+        console.error("Failed to load notes:", e);
+        // 必要に応じて、ユーザーにエラーを通知するUIを追加できます。
+      }
+    };
+    fetchNotes(); // 関数を実行します。
+  }, []); // 空の依存配列 [] を渡すことで、コンポーネントがマウントされた時 (最初の一回だけ) 実行されるようにします。
+
   // ノートを追加する関数
-  // NoteInputコンポーネントから呼び出される前提のため、あっちで定義されているonAddNote関数を実装
   const handleAddNote = async (text: string) => {
-    // 新しいノートのデータを作成
-    const newNote: NoteData = {
-      id: generateUniqueId(), // ユニークなIDを生成
-      text: text // 入力されたテキストを設定
-    }
-    setNotes(prevNotes => [...prevNotes, newNote]); // 既存のノートに新しいノートを追加。イミュータブルかつコールバックです
+    // NoteData 型の新しい付箋オブジェクトを作成します。
+    // Firestore がIDを生成
+    const newNoteContent: Omit<NoteData, 'id'> = { text: text }; // ★★★ IDを含まないデータを作成します ★★★
 
     try {
-      await addNoteToFirestore(newNote);
+      // addNoteToFirestore が Firestore が生成したID付きの NoteData を返します。
+      const addedNote = await addNoteToFirestore(newNoteContent); // Firestoreに新しいノートを追加します。同時に、Firestoreから返ってくるIDを含むノートデータを取得します。
+      setNotes((prevNotes) => [...prevNotes, addedNote]); // Firestoreから返ってきたID付きの付箋をStateに追加
     } catch (e) {
-      console.error("付箋の保存に失敗");
-      // ユーザーへの通知 ToDo
+      console.error("Failed to save note:", e);
     }
-  }
+  };
 
   // ノートの削除を処理する関数
   const handleDeleteNote = (id: string) => {
