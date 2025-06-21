@@ -1,6 +1,15 @@
 // src/services/firebase.ts
 import { initializeApp } from "firebase/app"; // Firebaseの初期化関数
-import { getFirestore, collection, addDoc, getDocs  } from "firebase/firestore"; // Firestoreを使うための関数
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  onSnapshot, 
+  query, 
+  QueryDocumentSnapshot, 
+  QuerySnapshot, 
+  DocumentData  } from "firebase/firestore"; // Firestoreを使うための関数
 import { NoteData } from "../types"; // NoteData型をインポート
 
 /**
@@ -72,4 +81,28 @@ export const getNotesFromFirestore = async (): Promise<NoteData[]> => {
     console.error("Error fetching notes from Firestore:", e);
     throw e;
   }
+};
+
+
+export const subscribeToNotes = (callback: (notes: NoteData[]) => void): () => void => {
+  const notesCollection = collection(db, NOTES_COLLECTION_NAME);
+  // クエリを作成 クエリの性質上条件を追加できるが、ここでは全てのドキュメントを取得するために条件は指定しない
+  const q = query(notesCollection); 
+
+  // onSnapshot を使用してリアルタイム監視を開始します。
+  const unsubscribe = onSnapshot(q, (querySnapshot: QuerySnapshot<DocumentData>) => {
+    const notes: NoteData[] = [];
+    querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
+      // ドキュメントデータとIDを結合して NoteData 型として追加します。
+      notes.push({ id: doc.id, ...doc.data() } as NoteData);
+    });
+    // 変更された付箋データのリストをコールバック関数に渡します。
+    callback(notes); 
+  }, (error) => {
+    // エラーが発生した場合、コンソールに出力します。
+    console.error("Error subscribing to notes:", error);
+  });
+
+  // 監視を停止するための関数を返します (useEffect のクリーンアップに利用)。
+  return unsubscribe; 
 };
