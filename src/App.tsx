@@ -41,7 +41,7 @@ export default function App() {
   /**
    * 新しい付箋のテキストを受け取り、それを Firestore に保存します。
    * State (画面表示) の更新は、Firestore のリアルタイムリスナー (onSnapshot) が行います。
-   * @param {string} text - 保存する付箋のテキスト内容。
+   * @param {string} text - 保存する付箋のテキスト内容。  
    */
   const handleSaveNewNote = async (text: string) => {
     // NoteData 型の新しい付箋オブジェクトを作成します。
