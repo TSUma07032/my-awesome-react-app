@@ -8,14 +8,19 @@ import './App.css'; // スタイルシートのインポート
 import React, {useState, useEffect} from "react";
 import Note from './components/Note';
 import NoteInput from './components/NoteInput';
-import { addNoteToFirestore, subscribeToNotes, updateNotePositionInFirestore } from './services/firebase'; 
+import { addNoteToFirestore,  subscribeToNotes } from './services/firebase'; 
 import { NoteData } from './types'; // NoteData型をインポート
-import { DndContext, DragEndEvent, useDraggable } from '@dnd-kit/core';
+import { DndProvider, useDrag, useDrop  } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 /*
 * クラス内のレイアウト定義
 */
+const dragStyle = {
+  cursor: 'move', // ドラッグ中のカーソルスタイル
+  opacity: 0.5, // ドラッグ中の透明度
+};
+
 
 /**
  * App関数コンポーネントは、ノートアプリケーションのメインコンポーネントで、ノートの追加と表示を管理します。
@@ -41,12 +46,32 @@ export default function App() {
     };
   }, []); // 空の依存配列 [] を渡すことで、コンポーネントがマウントされた時 (最初の一回だけ) 実行されるようにします。
 
+  // useDrag フックを使用して、ドラッグ可能なアイテムを定義します。
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'note', // ドラッグするアイテムのタイプを指定
+    item: { id: 'note' }, // ドラッグするアイテムのデータを指定
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(), // ドラッグ中かどうかを監視.おまじない的に使う
+    }),
+  }));
+
+  // useDrop フックを使用して、ドロップ可能な領域を定義します。
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'note', // ドロップ可能なアイテムのタイプを指定
+    drop: (item: { id: string }) => { // { id: string } 型のアイテムを受け取る
+      console.log(`Dropped item with ID: ${item.id}`); // ドロップされたアイテムのIDをログに出力
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(), // ドロップ領域にアイテムが重なっているかどうかを監視. おまじない的に使う
+    }),
+  }));
+
 
     // --- 新しい付箋をデータベースに保存する司令塔 ---
   const handleSaveNewNote = async (text: string) => {
     // NoteData 型の新しい付箋オブジェクトを作成します。
     // Firestore がIDを生成
-    const newNoteContent: Omit<NoteData, 'id'> = { text: text, x: 0, y: 0 }; // Omitを使用してidを除外します。
+    const newNoteContent: Omit<NoteData, 'id'> = { text: text }; // ★★★ IDを含まないデータを作成します ★★★
 
     try {
       await addNoteToFirestore(newNoteContent); // Firestoreにノートを追加します。
@@ -56,63 +81,36 @@ export default function App() {
   };
 
   const handleDeleteNote = (idToDelete: string) => {
+    // State の更新は subscribeToNotes が行うため、ここでは不要になります。
+    // setNotes((prevNotes) => prevNotes.filter((note) => note.id !== idToDelete)); 
     // Firebase からの削除処理をここに追加します ToDo
     console.log(`Attempting to delete note with ID: ${idToDelete}`);
   };
 
-  // ドラッグ終了時の処理を定義します。
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, delta } = event; // active はドラッグ中のアイテム、delta は移動量
-
-    // ドラッグされた付箋の ID を取得する
-    const draggedNoteId = active.id.toString(); // dnd-kit の id は string | number なので、string に変換
-
-    // 現在の State からドラッグされた付箋を見つける
-    const currentNote = notes.find(note => note.id === draggedNoteId);
-
-    if (currentNote) {
-      // 新しい位置を計算する
-      const newX = currentNote.x + delta.x;
-      const newY = currentNote.y + delta.y;
-
-      // State を更新する(optimistic update: まず画面を更新して、後で DB を更新する)
-      setNotes(prevNotes => 
-        prevNotes.map(note =>
-          note.id === draggedNoteId ? { ...note, x: newX, y: newY } : note
-        )
-      );
-
-      // Firestore の位置情報を更新するニャ！
-      try {
-        await updateNotePositionInFirestore(draggedNoteId, newX, newY);
-      } catch (e) {
-        console.error(`Failed to update note position in Firestore for ${draggedNoteId}:`, e);
-        // エラーが発生したら、State を元に戻すロジックが必要になるかもニャ！ (上級編)
-      }
-    }
-  };
   
 
   return (
-    <DndContext onDragEnd = {handleDragEnd} >
+    <DndProvider backend={HTML5Backend}> {/* ドラッグ＆ドロップのためのプロバイダーを設定 */}
       <div className="App"> {/*後でAppを作ろうね*/}
         <h1>付箋アプリケーション</h1>
         <NoteInput onAddNote={handleSaveNewNote} /> {/* NoteInputコンポーネントをレンダリングし、ノート追加のコールバックを渡す */}
-        <div
+
+        { drag( <div
           className = "notes-list-container"
+          style = {{...dragStyle, backgroundColor: isOver ? '#f0f0f0' : '#fff'}} // ドロップ領域のスタイルを設定
         >{/* ノートのリストを表示するコンテナ */}
           {notes.map((note)=>( //mapメソッドを使用して、ノートの配列をループ処理
             <Note 
               key={note.id} 
               note={note} 
-              onDelete={handleDeleteNote} 
-              /> 
+              onDelete={handleDeleteNote} /> 
           ))}
           {notes.length === 0 &&  // ノートがない場合のメッセージ
             <p>ノートがありません。新しいノートを追加してください。</p>}
         </div>
+        )}
       </div>
-    </DndContext>
+    </DndProvider>
   );  
 }
 

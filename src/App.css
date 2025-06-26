@@ -90,14 +90,20 @@ h1 {
   color: #888;
 }
 
-.notes-list-container { /* 追加*/
-  display: flex; /* 付箋を横並びにする！ */
-  flex-wrap: wrap; /* 画面幅が足りなくなったら、折り返す */
-  gap: 20px; /* 付箋同士の隙間！ */
+.notes-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
   padding: 20px;
-  justify-content: flex-start; /* 左から並べる！ */
-  align-items: flex-start; /* 上から並べる！ */
-  min-height: 200px; /* ある程度の高さを確保する！ */
-  border: 1px dashed #ddd; /* どんな場所かわかるように点線で囲んでおく.デバッグ用 */
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 200px;
+  border: 1px dashed var(--border-color);
   margin: 20px;
+  background-color: var(--bg-color);
+  border-radius: 8px;
+  position: relative; /* ★★★ これを追加する子要素の absolute の基準になる★★★ */
+  width: calc(100vw - 40px); 
+  min-height: 80vh; 
+  overflow: hidden; 
 }

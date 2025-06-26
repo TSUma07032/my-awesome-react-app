@@ -77,4 +77,15 @@ git push origin feature/add-sticky-note
 npm run dev
 ```
 
+```
+firebase deploy
+```
+
+```
+firebase hosting:disable
+```
+
 https://github.com/TSUma07032/my-awesome-react-app 
+
+https://my-test-react-app-firebase.web.app
+
