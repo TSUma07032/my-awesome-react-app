@@ -17,7 +17,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 * クラス内のレイアウト定義
 */
 
-
 /**
  * App関数コンポーネントは、ノートアプリケーションのメインコンポーネントで、ノートの追加と表示を管理します。
  * 
