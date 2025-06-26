@@ -9,7 +9,10 @@ import {
   query, 
   QueryDocumentSnapshot, 
   QuerySnapshot, 
-  DocumentData  } from "firebase/firestore"; // Firestoreを使うための関数
+  DocumentData,
+  doc,
+  updateDoc
+  } from "firebase/firestore"; // Firestoreを使うための関数
 import { NoteData } from "../types"; // NoteData型をインポート
 
 /**
@@ -45,7 +48,7 @@ const NOTES_COLLECTION_NAME = "notes"; // ★★★ コレクション名を定�
 /**
  * 
  */
-export const addNoteToFirestore = async (noteContent: Omit<NoteData,"id">) => {
+export const addNoteToFirestore = async (noteContent: Omit<NoteData,"id">): Promise<NoteData> => {
   try {
     // 'notes' という名前のコレクションにデータを追加
     const docRef = await addDoc(collection(db, NOTES_COLLECTION_NAME), noteContent);
@@ -58,7 +61,6 @@ export const addNoteToFirestore = async (noteContent: Omit<NoteData,"id">) => {
   }
 };
 
-// --- 新規追加：Firestore から付箋データを読み込む関数 ---
 /**
  * Firestore から全ての付箋データを読み込みます。
  * 各ドキュメントのデータには、Firestoreが自動生成するドキュメントIDも含まれます。
@@ -69,9 +71,8 @@ export const getNotesFromFirestore = async (): Promise<NoteData[]> => {
     const querySnapshot = await getDocs(collection(db, NOTES_COLLECTION_NAME)); // 'notes' コレクションから全てのドキュメントを取得します。
     const notes: NoteData[] = [];
     querySnapshot.forEach((doc) => {
-      // 各ドキュメントのデータ (doc.data()) とFirestoreのドキュメントID (doc.id) を結合し、NoteData 型として配列に追加します。
-      // NoteData の id と text 以外に Firestore のデータに他のプロパティがある場合も、as NoteData で型アサーションしています。
-      notes.push({ id: doc.id, ...doc.data() } as NoteData); 
+      const data = doc.data();
+      notes.push({ id: doc.id, text: data.text || '', x: data.x || 0, y: data.y || 0 } as NoteData);
     });
     // 読み込みが成功した場合、コンソールに取得した付箋データを出力します。
     console.log("Notes successfully fetched from Firestore:", notes);
@@ -94,7 +95,8 @@ export const subscribeToNotes = (callback: (notes: NoteData[]) => void): () => v
     const notes: NoteData[] = [];
     querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       // ドキュメントデータとIDを結合して NoteData 型として追加します。
-      notes.push({ id: doc.id, ...doc.data() } as NoteData);
+      const data = doc.data();
+      notes.push({ id: doc.id, text: data.text || '', x: data.x || 0, y: data.y || 0 } as NoteData);
     });
     // 変更された付箋データのリストをコールバック関数に渡します。
     callback(notes); 
@@ -105,4 +107,22 @@ export const subscribeToNotes = (callback: (notes: NoteData[]) => void): () => v
 
   // 監視を停止するための関数を返します (useEffect のクリーンアップに利用)。
   return unsubscribe; 
+};
+
+/**
+ * Firestore 上の付箋の位置情報を更新します。
+ * @param {string} id - 更新する付箋のID。
+ * @param {number} x - 更新後のX座標。
+ * @param {number} y - 更新後のY座標。
+ * @returns {Promise<void>} 更新が完了すると解決するPromise。
+ */
+export const updateNotePositionInFirestore = async (id: string, x: number, y: number): Promise<void> => {
+  try {
+    const noteDocRef = doc(db, NOTES_COLLECTION_NAME, id); // 特定のドキュメントへの参照を取得
+    await updateDoc(noteDocRef, { x, y }); // 位置情報だけを更新
+    console.log(`Note ${id} position updated in Firestore to (${x}, ${y})`);
+  } catch (e) {
+    console.error(`Error updating note ${id} position in Firestore:`, e);
+    throw e;
+  }
 };
